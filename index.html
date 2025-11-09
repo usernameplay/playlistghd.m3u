@@ -275,7 +275,7 @@
       loading = true;
       document.getElementById('loading').style.display = 'block';
 
-      fetch(`https://musicj-ghdorginalgmailcoms-projects.vercel.app/api/search/songs?q=${encodeURIComponent(searchQuery)}&p=${currentPage}`)
+      fetch(`https://eu19.proxysite.com/process.php?d=https://musicj-ghdorginalgmailcoms-projects.vercel.app/api/search/songs?q=${encodeURIComponent(searchQuery)}&p=${currentPage}`)
         .then(res => res.json())
         .then(data => {
           const songs = data.results || [];
