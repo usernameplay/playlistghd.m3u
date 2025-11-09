@@ -1,196 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GHD PLAY</title>
+  <title>Malayalam Songs Player</title>
   <style>
     body {
-      background: black;
-      color: white;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
+      padding-top: 90px;
+      background-color: #111;
+      color: #eee;
       overflow-x: hidden;
     }
 
-    h2 {
-      text-align: center;
-      margin-top: 20px;
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #1a1a1a;
+      padding: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      z-index: 1000;
+      border-bottom: 1px solid #333;
     }
 
-    .search-input {
-      padding: 10px;
-      width: 90%;
-      max-width: 400px;
-      margin: 20px auto;
-      display: block;
-      border-radius: 4px;
+    .button {
+      padding: 10px 15px;
       border: none;
-    }
-
-    .video-container {
-      position: relative;
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    video {
-      width: 100%;
-      max-width: 800px;
-      border-radius: 8px;
-    }
-
-    /* Watermark style */
-    .watermark {
-      position: absolute;
-      top: 60px;
-      right: 10px;
-      background: transparent;
-      color: white;
-      padding: 5px 10px;
       border-radius: 5px;
-      font-size: 14px;
-      font-weight: bold;
-      pointer-events: none;
+      cursor: pointer;
     }
 
-    .channel-list-wrapper {
-      max-height: 400px;
-      overflow-y: auto;
-      padding: 10px;
-      margin: 0 auto;
-      width: 95%;
-      max-width: 850px;
+    .search-button {
+      background-color: #e91e63;  
+      color: white;
     }
 
-    .channel-item {
+    .favorites-button {
+      background-color: #1976d2;
+      color: white;
+    }
+
+    .shuffle-button {
+      background-color: #00bcd4;
+      color: white;
+    }
+
+    .results {
+      margin-top: 10px;
+    }
+
+    .song-item {
       display: flex;
       align-items: center;
-      margin: 10px 0;
-      background: #222;
-      padding: 10px;
-      border-radius: 8px;
+      border-bottom: 1px solid #333;
+      padding: 10px 0;
+      cursor: pointer;
+      scroll-margin: 100px;
     }
 
-    .channel-logo {
-      width: 50px;
-      height: 50px;
+    .song-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 5px;
       margin-right: 10px;
+      flex-shrink: 0;
+      object-fit: cover;
     }
 
-    .channel-name {
-      font-size: 14px;
-      font-weight: bold;
+    .song-details {
+      flex-grow: 1;
+    }
+
+    .song-details h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .song-details p {
+      margin: 2px 0;
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      margin-left: 10px;
+    }
+
+    .icon-button {
+      font-size: 18px;
+      cursor: pointer;
+      color: #ccc;
+      user-select: none;
+    }
+
+    .favorite.active {
+      color: red;
+    }
+
+    .loading-indicator {
+      text-align: center;
+      margin-top: 30px;
       color: #fff;
     }
 
-    .watch-btn {
-      padding: 5px 10px;
-      background: #00BCD4;
-      color: white;
-      cursor: pointer;
-      border-radius: 5px;
-      margin-left: auto;
-      transition: all 0.2s ease-in-out;
+    /* Mini Player */
+    .mini-player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #222;
+      border-top: 1px solid #444;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      z-index: 999;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
+      display: none;
+      gap: 10px;
     }
 
-    .watch-btn:hover {
-      box-shadow: 0px 0px 10px rgba(0, 188, 212, 0.7);
-      transform: scale(1.05);
+    .mini-player img {
+      width: 60px;
+      height: 60px;
+      border-radius: 5px;
+      object-fit: cover;
+    }
+
+    .mini-details {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .mini-title {
+      font-size: 14px;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .time-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .seek {
+      width: 100%;
+    }
+
+    .time-info {
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mini-controls {
+      width: 28px;
+      height: 28px;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mini-controls.play {
+      filter: brightness(0) invert(1);
+      background-image: url('https://cdn-icons-png.flaticon.com/512/727/727245.png');
+    }
+
+    .mini-controls.pause {
+      filter: brightness(0) invert(1);
+      background-image: url('https://cdn-icons-png.flaticon.com/512/727/727269.png');
+    }
+
+    .mini-controls.prev {
+      filter: brightness(0) invert(1);
+      background-image: url('https://cdn-icons-png.flaticon.com/512/271/271220.png');
+    }
+
+    .mini-controls.next {
+      filter: brightness(0) invert(1);
+      background-image: url('https://cdn-icons-png.flaticon.com/512/271/271228.png');
+    }
+
+    .search-bar {
+      flex-grow: 1;
+      background-color: white;
+      border: 2px solid red;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      padding: 10px 10px;
+    }
+
+    .search-bar input {
+      border: none;
+      outline: none;
+      flex-grow: 1;
+      font-size: 1rem;
+      font-family: inherit;
     }
   </style>
 </head>
 <body>
-  <h2>GHDPLAY </h2>
 
-  <input type="text" id="searchBox" class="search-input" placeholder="Search for a channel..." onkeyup="searchChannels()">
-
-  <div class="video-container">
-    <video id="videoPlayer" controls></video>
-    <div class="watermark">GHD PLAY </div> <!-- Watermark text here -->
+  <div class="top-bar">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search songs...">
+    </div>
+    <button class="button search-button" onclick="startSearch()">Search</button>
+    <button class="button favorites-button" onclick="toggleFavorites()">Favorites</button>
+    <button class="button shuffle-button" onclick="toggleShuffle()">Shuffle</button>
   </div>
 
-  <div class="channel-list-wrapper">
-    <div id="channelList"></div>
-  </div>
+  <div id="results" class="results"></div>
+  <div id="loading" class="loading-indicator" style="display:none;">Loading...</div>
 
-  <!-- hls.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <div class="mini-player" id="miniPlayer">
+    <img id="miniThumb" src="" alt="Album Art" />
+    <div class="mini-details">
+      <div id="miniTitle" class="mini-title">Now Playing</div>
+      <div class="time-bar">
+        <input type="range" id="seekBar" class="seek" min="0" max="100" value="0">
+        <div class="time-info">
+          <span id="currentTime">0:00</span>
+          <span id="duration">0:00</span>
+        </div>
+      </div>
+    </div>
+    <div class="mini-controls prev" onclick="playPrevious()"></div>
+    <div id="miniToggle" class="mini-controls play" onclick="toggleMiniPlayback()"></div>
+    <div class="mini-controls next" onclick="playNext()"></div>
+  </div>
 
   <script>
-    let channels = [];
-    let hls;
+    let currentAudio = null;
+    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+    let allSongs = {};
+    let songUrls = [];
+    let currentPage = 1;
+    let searchQuery = '';
+    let loading = false;
+    let showFavoritesOnly = false;
+    let shuffle = false;
 
-    async function fetchChannels() {
-      const playlistUrl = "https://raw.githubusercontent.com/usernameplay/playlistghd.m3u/refs/heads/main/ghdply.m3u";
-      try {
-        const response = await fetch(playlistUrl);
-        const playlistText = await response.text();
-        const lines = playlistText.split("\n");
-
-        channels = [];
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].startsWith("#EXTINF")) {
-            let name = lines[i].split(",")[1] || "Unknown Channel";
-            let logo = lines[i].match(/tvg-logo="(.*?)"/)?.[1] || "";
-            let url = lines[i + 1]?.trim();
-            if (url && url.startsWith("http")) {
-              channels.push({ name, url, logo });
-            }
-          }
-        }
-
-        displayChannels(channels);
-        if (channels.length > 0) playChannel(channels[0].url);
-      } catch (error) {
-        console.error("Error fetching playlist:", error);
-      }
+    function startSearch() {
+      searchQuery = document.getElementById('searchInput').value.trim();
+      if (!searchQuery) return;
+      currentPage = 1;
+      allSongs = {};
+      songUrls = [];
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('loading').style.display = 'block';
+      fetchSongs();
     }
 
-    function displayChannels(channelList) {
-      const container = document.getElementById("channelList");
-      container.innerHTML = "";
-      channelList.forEach(channel => {
-        container.innerHTML += `
-          <div class="channel-item">
-            <img src="${channel.logo}" class="channel-logo"/>
-            <div class="channel-name">${channel.name}</div>
-            <div class="watch-btn" onclick="playChannel('${channel.url}')">▶ Watch</div>
+    function fetchSongs() {
+      if (!searchQuery || loading) return;
+      loading = true;
+      document.getElementById('loading').style.display = 'block';
+
+      fetch(`https://musicj-ghdorginalgmailcoms-projects.vercel.app/api/search/songs?q=${encodeURIComponent(searchQuery)}&p=${currentPage}`)
+        .then(res => res.json())
+        .then(data => {
+          const songs = data.results || [];
+          if (songs.length > 0) {
+            songs.forEach(song => {
+              const url = song.url['320kbps'];
+              if (!url) return;
+              allSongs[url] = song;
+              if (!songUrls.includes(url)) songUrls.push(url);
+            });
+            renderSongs(songs);
+            currentPage++;
+          }
+        })
+        .catch(err => console.error(err))
+        .finally(() => {
+          loading = false;
+          document.getElementById('loading').style.display = 'none';
+        });
+    }
+
+    function renderSongs(songs) {
+      const resultsDiv = document.getElementById('results');
+      let filtered = songs;
+
+      if (showFavoritesOnly) {
+        filtered = songs.filter(s => favorites.includes(s.url['320kbps']));
+      }
+
+      resultsDiv.innerHTML += filtered.map(song => {
+        const url = song.url['320kbps'];
+        const fav = favorites.includes(url);
+        return `
+          <div class="song-item" id="song-${btoa(url)}" onclick="playFromList('${url}')">
+            <img src="${song.image?.['500X500'] || ''}" alt="${song.title}">
+            <div class="song-details">
+              <h4>${song.title}</h4>
+              <p>${song.artists || ''} ${song.album ? '• ' + song.album : ''}</p>
+            </div>
+            <div class="actions" onclick="event.stopPropagation(); toggleFavorite(this.querySelector('.favorite'), '${url}')">
+              <div class="icon-button favorite ${fav ? 'active' : ''}">&#10084;</div>
+            </div>
           </div>
         `;
-      });
+      }).join('');
     }
 
-    function searchChannels() {
-      const query = document.getElementById("searchBox").value.toLowerCase();
-      displayChannels(channels.filter(channel =>
-        channel.name.toLowerCase().includes(query)
-      ));
+    function playFromList(url) {
+      if (!url) return;
+      const song = allSongs[url];
+      if (!song) return;
+      if (currentAudio) currentAudio.pause();
+
+      const audio = new Audio(url);
+      currentAudio = audio;
+      updateMiniPlayer(song);
+      audio.play();
+
+      const seekBar = document.getElementById("seekBar");
+      const curTime = document.getElementById("currentTime");
+      const duration = document.getElementById("duration");
+
+      audio.ontimeupdate = () => {
+        seekBar.max = audio.duration;
+        seekBar.value = audio.currentTime;
+        curTime.textContent = formatTime(audio.currentTime);
+        duration.textContent = formatTime(audio.duration);
+      };
+
+      seekBar.oninput = () => {
+        if (currentAudio) currentAudio.currentTime = seekBar.value;
+      };
+
+      audio.onended = playNext;
     }
 
-    function playChannel(url) {
-      const video = document.getElementById("videoPlayer");
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
 
-      if (Hls.isSupported()) {
-        if (hls) {
-          hls.destroy();
-        }
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.play();
-        });
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = url;
-        video.addEventListener("loadedmetadata", function () {
-          video.play();
-        });
+    function updateMiniPlayer(song) {
+      const mini = document.getElementById('miniPlayer');
+      const thumb = document.getElementById('miniThumb');
+      const title = document.getElementById('miniTitle');
+      const toggle = document.getElementById('miniToggle');
+      mini.style.display = 'flex';
+      thumb.src = song.image?.['500X500'] || '';
+      title.textContent = song.title;
+      toggle.classList.remove('play');
+      toggle.classList.add('pause');
+    }
+
+    function toggleMiniPlayback() {
+      const toggle = document.getElementById('miniToggle');
+      if (!currentAudio) return;
+      if (currentAudio.paused) {
+        currentAudio.play();
+        toggle.classList.remove('play');
+        toggle.classList.add('pause');
+      } else {
+        currentAudio.pause();
+        toggle.classList.remove('pause');
+        toggle.classList.add('play');
       }
     }
 
-    fetchChannels();
+    function toggleFavorite(el, url) {
+      el.classList.toggle('active');
+      const index = favorites.indexOf(url);
+      if (index === -1) favorites.push(url);
+      else favorites.splice(index, 1);
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+    }
+
+    function toggleFavorites() {
+      showFavoritesOnly = !showFavoritesOnly;
+      document.getElementById('results').innerHTML = '';
+      if (showFavoritesOnly) {
+        const favSongs = songUrls.filter(u => favorites.includes(u)).map(u => allSongs[u]);
+        renderSongs(favSongs);
+      } else {
+        fetchSongs();
+      }
+    }
+
+    function toggleShuffle() {
+      shuffle = !shuffle;
+      alert("GHDPLAY ❤️ Shuffle: " + (shuffle ? "ON" : "OFF"));
+    }
+
+    function playNext() {
+      if (!songUrls.length) return;
+      const curIndex = songUrls.indexOf(currentAudio?.src);
+      if (shuffle) {
+        const randomIndex = Math.floor(Math.random() * songUrls.length);
+        playFromList(songUrls[randomIndex]);
+      } else if (curIndex >= 0 && curIndex < songUrls.length - 1) {
+        playFromList(songUrls[curIndex + 1]);
+      }
+    }
+
+    function playPrevious() {
+      const curIndex = songUrls.indexOf(currentAudio?.src);
+      if (curIndex > 0) {
+        playFromList(songUrls[curIndex - 1]);
+      }
+    }
+
+    window.addEventListener('scroll', () => {
+      if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 200)) {
+        fetchSongs();
+      }
+    });
   </script>
 </body>
 </html>
