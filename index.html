@@ -2,435 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malayalam Songs Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surya Music - Live</title>
+
+  <!-- Shaka Player -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
+
   <style>
     body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: white;
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding-top: 90px;
-      background-color: #111;
-      color: #eee;
-      overflow-x: hidden;
-    }
-
-    .top-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background-color: #1a1a1a;
-      padding: 15px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
-      gap: 8px;
-      z-index: 1000;
-      border-bottom: 1px solid #333;
+      height: 100vh;
     }
-
-    .button {
-      padding: 10px 15px;
-      border: none;
+    .shaka-video-container {
+      width: 100%;
+      height: 100vh;
+      background-color: #000;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    .title {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(0,0,0,0.6);
+      padding: 6px 12px;
       border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .search-button {
-      background-color: #e91e63;  
-      color: white;
-    }
-
-    .favorites-button {
-      background-color: #1976d2;
-      color: white;
-    }
-
-    .shuffle-button {
-      background-color: #00bcd4;
-      color: white;
-    }
-
-    .results {
-      margin-top: 10px;
-    }
-
-    .song-item {
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid #333;
-      padding: 10px 0;
-      cursor: pointer;
-      scroll-margin: 100px;
-    }
-
-    .song-item img {
-      width: 60px;
-      height: 60px;
-      border-radius: 5px;
-      margin-right: 10px;
-      flex-shrink: 0;
-      object-fit: cover;
-    }
-
-    .song-details {
-      flex-grow: 1;
-    }
-
-    .song-details h4 {
-      margin: 0;
       font-size: 16px;
-    }
-
-    .song-details p {
-      margin: 2px 0;
-      font-size: 13px;
-      color: #aaa;
-    }
-
-    .actions {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      margin-left: 10px;
-    }
-
-    .icon-button {
-      font-size: 18px;
-      cursor: pointer;
-      color: #ccc;
-      user-select: none;
-    }
-
-    .favorite.active {
-      color: red;
-    }
-
-    .loading-indicator {
-      text-align: center;
-      margin-top: 30px;
-      color: #fff;
-    }
-
-    /* Mini Player */
-    .mini-player {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #222;
-      border-top: 1px solid #444;
-      padding: 12px;
-      display: flex;
-      align-items: center;
-      z-index: 999;
-      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
-      display: none;
-      gap: 10px;
-    }
-
-    .mini-player img {
-      width: 60px;
-      height: 60px;
-      border-radius: 5px;
-      object-fit: cover;
-    }
-
-    .mini-details {
-      flex-grow: 1;
-      overflow: hidden;
-    }
-
-    .mini-title {
-      font-size: 14px;
-      color: white;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .time-bar {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      margin-top: 5px;
-    }
-
-    .seek {
-      width: 100%;
-    }
-
-    .time-info {
-      font-size: 12px;
-      color: #aaa;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .mini-controls {
-      width: 28px;
-      height: 28px;
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .mini-controls.play {
-      filter: brightness(0) invert(1);
-      background-image: url('https://cdn-icons-png.flaticon.com/512/727/727245.png');
-    }
-
-    .mini-controls.pause {
-      filter: brightness(0) invert(1);
-      background-image: url('https://cdn-icons-png.flaticon.com/512/727/727269.png');
-    }
-
-    .mini-controls.prev {
-      filter: brightness(0) invert(1);
-      background-image: url('https://cdn-icons-png.flaticon.com/512/271/271220.png');
-    }
-
-    .mini-controls.next {
-      filter: brightness(0) invert(1);
-      background-image: url('https://cdn-icons-png.flaticon.com/512/271/271228.png');
-    }
-
-    .search-bar {
-      flex-grow: 1;
-      background-color: white;
-      border: 2px solid red;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      padding: 10px 10px;
-    }
-
-    .search-bar input {
-      border: none;
-      outline: none;
-      flex-grow: 1;
-      font-size: 1rem;
-      font-family: inherit;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search songs...">
-    </div>
-    <button class="button search-button" onclick="startSearch()">Search</button>
-    <button class="button favorites-button" onclick="toggleFavorites()">Favorites</button>
-    <button class="button shuffle-button" onclick="toggleShuffle()">Shuffle</button>
-  </div>
-
-  <div id="results" class="results"></div>
-  <div id="loading" class="loading-indicator" style="display:none;">Loading...</div>
-
-  <div class="mini-player" id="miniPlayer">
-    <img id="miniThumb" src="" alt="Album Art" />
-    <div class="mini-details">
-      <div id="miniTitle" class="mini-title">Now Playing</div>
-      <div class="time-bar">
-        <input type="range" id="seekBar" class="seek" min="0" max="100" value="0">
-        <div class="time-info">
-          <span id="currentTime">0:00</span>
-          <span id="duration">0:00</span>
-        </div>
-      </div>
-    </div>
-    <div class="mini-controls prev" onclick="playPrevious()"></div>
-    <div id="miniToggle" class="mini-controls play" onclick="toggleMiniPlayback()"></div>
-    <div class="mini-controls next" onclick="playNext()"></div>
+  <div class="title">🎵 Surya Music Live</div>
+  <div class="shaka-video-container" data-shaka-player-container>
+    <video autoplay data-shaka-player id="video"></video>
   </div>
 
   <script>
-    let currentAudio = null;
-    let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    let allSongs = {};
-    let songUrls = [];
-    let currentPage = 1;
-    let searchQuery = '';
-    let loading = false;
-    let showFavoritesOnly = false;
-    let shuffle = false;
+    document.addEventListener('DOMContentLoaded', async () => {
+      const manifestUri = "https://jiotvpllive.cdn.jio.com/bpk-tv/Surya_Music_MOB/WDVLive/index.mpd?__hdnea__=st=1763032096~exp=1763118496~acl=/*~hmac=0ea437341a7185d02af98041febcfd963c5033ad914f3740cce76d333c4a75c3";
 
-    function startSearch() {
-      searchQuery = document.getElementById('searchInput').value.trim();
-      if (!searchQuery) return;
-      currentPage = 1;
-      allSongs = {};
-      songUrls = [];
-      document.getElementById('results').innerHTML = '';
-      document.getElementById('loading').style.display = 'block';
-      fetchSongs();
-    }
+      const licenseServer = "https://vercel-php-clearkey-hex-base64-json.vercel.app/api/results.php?keyid=6dec22d787845c828b7e7b08c4036cf6&key=b46904ae1a6fcae716b8e8cdf78de849";
 
-    function fetchSongs() {
-      if (!searchQuery || loading) return;
-      loading = true;
-      document.getElementById('loading').style.display = 'block';
+      const video = document.getElementById('video');
+      const ui = video['ui'];
+      const controls = ui.getControls();
+      const player = controls.getPlayer();
 
-      fetch(`https://eu19.proxysite.com/process.php?d=https://musicj-ghdorginalgmailcoms-projects.vercel.app/api/search/songs?q=${encodeURIComponent(searchQuery)}&p=${currentPage}`)
-        .then(res => res.json())
-        .then(data => {
-          const songs = data.results || [];
-          if (songs.length > 0) {
-            songs.forEach(song => {
-              const url = song.url['320kbps'];
-              if (!url) return;
-              allSongs[url] = song;
-              if (!songUrls.includes(url)) songUrls.push(url);
-            });
-            renderSongs(songs);
-            currentPage++;
+      // Attach player to window for debugging
+      window.player = player;
+
+      // DRM (ClearKey) setup
+      player.configure({
+        drm: {
+          clearKeys: {
+            "6dec22d787845c828b7e7b08c4036cf6": "b46904ae1a6fcae716b8e8cdf78de849"
           }
-        })
-        .catch(err => console.error(err))
-        .finally(() => {
-          loading = false;
-          document.getElementById('loading').style.display = 'none';
-        });
-    }
+        },
+        streaming: {
+          bufferingGoal: 10,
+          rebufferingGoal: 5
+        },
+        manifest: {
+          dash: { ignoreMinBufferTime: true }
+        }
+      });
 
-    function renderSongs(songs) {
-      const resultsDiv = document.getElementById('results');
-      let filtered = songs;
+      // Add required headers
+      player.getNetworkingEngine().registerRequestFilter((type, request) => {
+        if (type === shaka.net.NetworkingEngine.RequestType.MANIFEST ||
+            type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
+          request.headers['User-Agent'] = 'plaYtv/7.1.3 (Linux;Android 13) ygx/69.1 ExoPlayerLib/824.0';
+          request.headers['Cookie'] = '__hdnea__=st=1763032096~exp=1763118496~acl=/*~hmac=0ea437341a7185d02af98041febcfd963c5033ad914f3740cce76d333c4a75c3';
+        }
+      });
 
-      if (showFavoritesOnly) {
-        filtered = songs.filter(s => favorites.includes(s.url['320kbps']));
-      }
-
-      resultsDiv.innerHTML += filtered.map(song => {
-        const url = song.url['320kbps'];
-        const fav = favorites.includes(url);
-        return `
-          <div class="song-item" id="song-${btoa(url)}" onclick="playFromList('${url}')">
-            <img src="${song.image?.['500X500'] || ''}" alt="${song.title}">
-            <div class="song-details">
-              <h4>${song.title}</h4>
-              <p>${song.artists || ''} ${song.album ? '• ' + song.album : ''}</p>
-            </div>
-            <div class="actions" onclick="event.stopPropagation(); toggleFavorite(this.querySelector('.favorite'), '${url}')">
-              <div class="icon-button favorite ${fav ? 'active' : ''}">&#10084;</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function playFromList(url) {
-      if (!url) return;
-      const song = allSongs[url];
-      if (!song) return;
-      if (currentAudio) currentAudio.pause();
-
-      const audio = new Audio(url);
-      currentAudio = audio;
-      updateMiniPlayer(song);
-      audio.play();
-
-      const seekBar = document.getElementById("seekBar");
-      const curTime = document.getElementById("currentTime");
-      const duration = document.getElementById("duration");
-
-      audio.ontimeupdate = () => {
-        seekBar.max = audio.duration;
-        seekBar.value = audio.currentTime;
-        curTime.textContent = formatTime(audio.currentTime);
-        duration.textContent = formatTime(audio.duration);
-      };
-
-      seekBar.oninput = () => {
-        if (currentAudio) currentAudio.currentTime = seekBar.value;
-      };
-
-      audio.onended = playNext;
-    }
-
-    function formatTime(sec) {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-
-    function updateMiniPlayer(song) {
-      const mini = document.getElementById('miniPlayer');
-      const thumb = document.getElementById('miniThumb');
-      const title = document.getElementById('miniTitle');
-      const toggle = document.getElementById('miniToggle');
-      mini.style.display = 'flex';
-      thumb.src = song.image?.['500X500'] || '';
-      title.textContent = song.title;
-      toggle.classList.remove('play');
-      toggle.classList.add('pause');
-    }
-
-    function toggleMiniPlayback() {
-      const toggle = document.getElementById('miniToggle');
-      if (!currentAudio) return;
-      if (currentAudio.paused) {
-        currentAudio.play();
-        toggle.classList.remove('play');
-        toggle.classList.add('pause');
-      } else {
-        currentAudio.pause();
-        toggle.classList.remove('pause');
-        toggle.classList.add('play');
-      }
-    }
-
-    function toggleFavorite(el, url) {
-      el.classList.toggle('active');
-      const index = favorites.indexOf(url);
-      if (index === -1) favorites.push(url);
-      else favorites.splice(index, 1);
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-    }
-
-    function toggleFavorites() {
-      showFavoritesOnly = !showFavoritesOnly;
-      document.getElementById('results').innerHTML = '';
-      if (showFavoritesOnly) {
-        const favSongs = songUrls.filter(u => favorites.includes(u)).map(u => allSongs[u]);
-        renderSongs(favSongs);
-      } else {
-        fetchSongs();
-      }
-    }
-
-    function toggleShuffle() {
-      shuffle = !shuffle;
-      alert("GHDPLAY ❤️ Shuffle: " + (shuffle ? "ON" : "OFF"));
-    }
-
-    function playNext() {
-      if (!songUrls.length) return;
-      const curIndex = songUrls.indexOf(currentAudio?.src);
-      if (shuffle) {
-        const randomIndex = Math.floor(Math.random() * songUrls.length);
-        playFromList(songUrls[randomIndex]);
-      } else if (curIndex >= 0 && curIndex < songUrls.length - 1) {
-        playFromList(songUrls[curIndex + 1]);
-      }
-    }
-
-    function playPrevious() {
-      const curIndex = songUrls.indexOf(currentAudio?.src);
-      if (curIndex > 0) {
-        playFromList(songUrls[curIndex - 1]);
-      }
-    }
-
-    window.addEventListener('scroll', () => {
-      if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 200)) {
-        fetchSongs();
+      try {
+        await player.load(manifestUri);
+        console.log('✅ Surya Music loaded successfully!');
+      } catch (error) {
+        console.error('❌ Error loading stream:', error);
       }
     });
   </script>
+
 </body>
 </html>
