@@ -32,7 +32,7 @@ def get_channels():
 
             # 2. Extract Logo URL
             logo_match = re.search(r'tvg-logo="([^"]+)"', entry)
-            channel_data['tvg_logo'] = logo_match.group(1) if logo_match else None
+            channel_data['tvg-logo'] = logo_match.group(1) if logo_match else None
 
             # 3. Extract the specific Stream User-Agent (from EXTVLCOPT)
             ua_match = re.search(r'#EXTVLCOPT:http-user-agent=([^\n\r]+)', entry)
